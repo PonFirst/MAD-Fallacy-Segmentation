@@ -4,9 +4,9 @@ A Multi-Agent Debate (MAD) system for span-level logical fallacy detection in po
 
 ## Overview
 
-This system detects ALL fallacious spans in full political debate speech turns using three specialized agents — Logos (logical structure), Pathos (emotional manipulation), Ethos (credibility abuse) — whose reports are synthesized by a Judge agent into final predictions.
+This system jointly detects and classifies logical fallacies in full political debate speech turns using a Multi-Agent Debate (MAD) framework. Three specialized agents — Logos (logical structure), Pathos (emotional manipulation), Ethos (credibility abuse) — independently analyze each dialogue and produce structured reports. A Judge agent synthesizes these reports into a final prediction list, where each prediction includes a fallacy category label and exact character-level span boundaries marking where the fallacy occurs in the text.
 
-Unlike prior work that classifies pre-segmented fallacy snippets, our system operates on full unsegmented speech turns averaging 1,600 words and predicts multiple co-occurring fallacies per dialogue with exact character-level span boundaries.
+Unlike prior work that classifies pre-segmented fallacy snippets into a single label per input, our system operates on full unsegmented speech turns averaging 1,600 words and predicts multiple co-occurring fallacies per dialogue across six categories: AdHominem, AppealtoAuthority, AppealtoEmotion, FalseCause, Slipperyslope, and Slogans.
 
 ## Dataset
 
