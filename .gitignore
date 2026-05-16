@@ -1,0 +1,12 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+venv/
+results/
+*.jsonl
+.DS_Store
+.DS_Store
+full_speeches.csv
+process.ipynb
+ann_guidelines.pdf
