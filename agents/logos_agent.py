@@ -80,7 +80,7 @@ DIALOGUE:
                 {"role": "user", "content": user_message}
             ],
             temperature=0.1,
-            max_tokens=1024,
+            max_tokens=4096,
         )
 
         raw = response.choices[0].message.content.strip()

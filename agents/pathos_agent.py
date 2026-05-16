@@ -73,7 +73,7 @@ DIALOGUE:
                 config=types.GenerateContentConfig(
                     system_instruction=SYSTEM_PROMPT,
                     temperature=0.1,
-                    max_output_tokens=1024,
+                    max_output_tokens=4096,
                 )
             )
 

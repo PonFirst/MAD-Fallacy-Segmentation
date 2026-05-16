@@ -70,10 +70,16 @@ DIALOGUE:
                     {"role": "user", "content": user_message}
                 ],
                 temperature=0.1,
-                max_tokens=2048,
+                max_tokens=4096,
             )
 
             raw = response.choices[0].message.content.strip()
+
+            # detect truncation
+            finish_reason = response.choices[0].finish_reason
+            if finish_reason == "length":
+                print(f"  WARNING: output truncated at {len(raw)} chars — increase max_tokens")
+            
             raw = re.sub(r"```json|```", "", raw).strip()
             parsed = json.loads(raw)
 
@@ -93,7 +99,7 @@ DIALOGUE:
                 return [{"error": "api_error", "details": str(e)}]
 
 
-def save_results(results_list, path="results/zero_shot_full.jsonl"):
+def save_results(results_list, path="results/zero_shot_full_v2.jsonl"):
     os.makedirs("results", exist_ok=True)
     with open(path, "w") as f:
         for record in results_list:
@@ -137,11 +143,11 @@ if __name__ == "__main__":
         # save incrementally every 10 dialogues
         # so progress is not lost if something crashes
         if (i + 1) % 10 == 0:
-            save_results(all_results, "results/zero_shot_full.jsonl")
+            save_results(all_results, "results/zero_shot_full_v2.jsonl")
             print(f"  Progress saved ({i+1}/{total})")
 
         if i < total - 1:
-            time.sleep(25)
+            time.sleep(20)
 
-    save_results(all_results, "results/zero_shot_full.jsonl")
+    save_results(all_results, "results/zero_shot_full_v2.jsonl")
     print(f"\nDone. {total} dialogues evaluated.")
