@@ -22,6 +22,8 @@ ElecDeb60To20 (Goffredo et al., EMNLP 2023) — US presidential debate transcrip
 | Judge  | openai/gpt-oss-120b     | Groq     | Multi-report synthesis     |
 
 ## Repository Structure
+
+```
 agents/          — Logos, Pathos, Ethos, Judge agent implementations
 baselines/       — Zero-shot, few-shot, generic MAD baselines
 data/            — ElecDeb60To20 dataset
@@ -30,7 +32,7 @@ data_loader.py   — Dataset loading and preprocessing
 evaluate.py      — Greedy one-to-one span matching evaluation
 pipeline.py      — Full MAD pipeline with asyncio
 config.py        — Model names and hyperparameters
-
+```
 ## Setup
 
 ```bash
