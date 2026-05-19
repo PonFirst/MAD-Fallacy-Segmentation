@@ -153,15 +153,22 @@ if __name__ == "__main__":
     train, test = get_train_test_split(df)
 
     total = len(test)
-    print(f"\nRunning Generic MAD baseline on all {total} test dialogues...\n")
-    # 3 LLaMA agent calls (10s sleep each) + Judge + 20s between dialogues
-    secs_per_dialogue = 2 * INTER_AGENT_SLEEP + 5 + 20
-    print(f"Estimated time: {total * secs_per_dialogue / 60:.1f} minutes "
-          f"(~{total * 3 * 3000 // 1000}K LLaMA tokens, TPD limit = 100K)\n")
+    START_FROM = 10  # update this to resume from correct position
 
+    # load existing results so we don't overwrite completed dialogues
+    existing_path = "results/generic_mad_full.jsonl"
     all_results = []
+    if os.path.exists(existing_path) and START_FROM > 0:
+        with open(existing_path) as f:
+            all_results = [json.loads(line) for line in f if line.strip()]
+        print(f"Loaded {len(all_results)} existing results")
 
-    for i in range(total):
+    print(f"\nRunning Generic MAD baseline on all {total} test dialogues...\n")
+    secs_per_dialogue = 2 * INTER_AGENT_SLEEP + 5 + 20
+    print(f"Resuming from dialogue {START_FROM + 1}/{total}")
+    print(f"Estimated remaining time: {(total - START_FROM) * secs_per_dialogue / 60:.1f} minutes\n")
+
+    for i in range(START_FROM, total):
         sample = test.iloc[i]
         dialogue = sample["dialogue"]
         gold_annotations = sample["annotations"]
@@ -185,11 +192,11 @@ if __name__ == "__main__":
             print(f"  Predicted: {len(predictions)} fallacies")
 
         if (i + 1) % 10 == 0:
-            save_results(all_results, "results/generic_mad_full.jsonl")
+            save_results(all_results, existing_path)
             print(f"  Progress saved ({i+1}/{total})")
 
         if i < total - 1:
             time.sleep(20)
 
-    save_results(all_results, "results/generic_mad_full.jsonl")
+    save_results(all_results, existing_path)
     print(f"\nDone. {total} dialogues evaluated.")
