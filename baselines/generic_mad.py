@@ -14,11 +14,13 @@ load_dotenv()
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# Generic agents use the same model as the zero-shot baseline and the same
-# non-specialized system prompt. The only structural difference from zero-shot
-# is that three independent calls are made and a Judge synthesizes them.
-# This isolates the contribution of rhetorical specialization in the full MAD.
-GENERIC_AGENT_MODEL = "openai/gpt-oss-120b"
+# Generic agents use LLaMA 3.3 70B (same as Logos in the full MAD system) to
+# preserve GPT-OSS-120B's 200K TPD quota for the Judge across all MAD variants.
+# All three agents share the same non-specialized system prompt — the only
+# structural difference from zero-shot is three independent calls + Judge synthesis.
+# This isolates the contribution of rhetorical specialization.
+GENERIC_AGENT_MODEL = "llama-3.3-70b-versatile"
+INTER_AGENT_SLEEP = 10  # seconds — LLaMA TPM is 12K; 3 calls × ~3K tokens needs ~45s/dialogue
 
 GENERIC_SYSTEM_PROMPT = """You are an expert in logical fallacy detection and argumentation theory.
 Your job is to analyze political debate dialogues and identify ALL logical fallacies present.
@@ -108,19 +110,19 @@ def run_generic_agent(dialogue: str, agent_id: str) -> list:
 
 def run_generic_mad(dialogue: str) -> list:
     """
-    Run three identical generic agents sequentially, then synthesize with the Judge.
-    Sequential (not async) to stay within the 30 RPM limit for gpt-oss-120b.
-    No debate trigger — this baseline tests specialization, not debate mechanics.
+    Run three identical generic agents (LLaMA 3.3 70B) sequentially, then
+    synthesize with the Judge (GPT-OSS 120B). Sequential to stay within LLaMA's
+    30 RPM limit. No debate trigger — this baseline tests specialization value.
 
     Returns the Judge's output with fallacy_label renamed to suspected_fallacy
     for compatibility with evaluate.py.
     """
     report_a = run_generic_agent(dialogue, "A")
-    time.sleep(5)
+    time.sleep(INTER_AGENT_SLEEP)
     report_b = run_generic_agent(dialogue, "B")
-    time.sleep(5)
+    time.sleep(INTER_AGENT_SLEEP)
     report_c = run_generic_agent(dialogue, "C")
-    time.sleep(5)
+    time.sleep(5)  # brief pause before Judge (different model, separate quota)
 
     judge_output = run_judge(dialogue, report_a, report_b, report_c)
 
@@ -152,8 +154,10 @@ if __name__ == "__main__":
 
     total = len(test)
     print(f"\nRunning Generic MAD baseline on all {total} test dialogues...\n")
-    # 4 API calls per dialogue × 20s sleep between dialogues
-    print(f"Estimated time: {total * (4 * 5 + 20) / 60:.1f} minutes\n")
+    # 3 LLaMA agent calls (10s sleep each) + Judge + 20s between dialogues
+    secs_per_dialogue = 2 * INTER_AGENT_SLEEP + 5 + 20
+    print(f"Estimated time: {total * secs_per_dialogue / 60:.1f} minutes "
+          f"(~{total * 3 * 3000 // 1000}K LLaMA tokens, TPD limit = 100K)\n")
 
     all_results = []
 

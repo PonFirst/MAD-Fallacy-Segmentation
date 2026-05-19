@@ -416,7 +416,7 @@ def save_metrics_csv(systems, output_path="results/metrics_summary.csv"):
 if __name__ == "__main__":
     systems = [
         ("Zero-shot",    "results/zero_shot_full_v2.jsonl"),
-        # ("Few-shot",     "results/few_shot_full.jsonl"),
+        ("Few-shot",     "results/few_shot_full.jsonl"),
         # ("Generic MAD",  "results/generic_mad_full.jsonl"),
         # ("MAD no debate","results/mad_no_debate_full.jsonl"),
         # ("MAD full",     "results/mad_full.jsonl"),

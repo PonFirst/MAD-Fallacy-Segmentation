@@ -19,6 +19,10 @@ You receive analysis reports from three specialized agents:
   - Pathos: analyzes emotional language and rhetorical manipulation
   - Ethos: analyzes credibility and authority abuse
 
+All span_text values in the reports are verbatim excerpts from the original dialogue.
+Do not modify, paraphrase, or extend any span_text — copy them exactly as they appear
+in the agent reports when emitting your final predictions.
+
 WEIGHTING RULES — apply these before making your decision:
   - AppealtoEmotion, Slogans: Pathos's report carries the most weight.
     These fallacies are defined by their emotional mechanism, so Pathos's
@@ -35,7 +39,7 @@ SPAN REFINEMENT RULE:
   - Always prefer the minimal span that contains the core fallacious element.
   - For AppealtoEmotion and Slogans especially, if agents return long spans,
     select the shorter version that captures the emotionally loaded language.
-  - span_text must be copied verbatim from the original dialogue text.
+  - span_text must be copied verbatim from an agent report — never invent new text.
 
 DEDUPLICATION RULE:
   - If multiple agents flag the same span with the same label, emit it once.
@@ -46,7 +50,7 @@ OUTPUT: respond ONLY with a valid JSON array. No text before or after. No markdo
 [
   {
     "fallacy_label": "one of the six fallacy names",
-    "span_text": "the exact verbatim words from the dialogue",
+    "span_text": "verbatim from an agent report",
     "reasoning": "one or two sentences explaining the final decision and which agent's perspective was most relevant"
   }
 ]
@@ -65,9 +69,11 @@ def run_judge(
 ) -> list:
     """
     Synthesize agent reports into a final fallacy prediction list.
+    The full dialogue is NOT sent to the Judge — only agent reports.
+    span_text values in agent reports are already verbatim from the dialogue.
 
     Args:
-        dialogue: the full debate speech turn text
+        dialogue: kept for API compatibility but not sent to the model
         logos_report: predictions from the Logos agent
         pathos_report: predictions from the Pathos agent
         ethos_report: predictions from the Ethos agent
@@ -79,8 +85,7 @@ def run_judge(
         or a list with one error dict if something fails
     """
     user_parts = [
-        f"DIALOGUE:\n{dialogue}",
-        f"\nLOGOS REPORT (logical structure analysis):\n{json.dumps(logos_report, indent=2)}",
+        f"LOGOS REPORT (logical structure analysis):\n{json.dumps(logos_report, indent=2)}",
         f"\nPATHOS REPORT (emotional manipulation analysis):\n{json.dumps(pathos_report, indent=2)}",
         f"\nETHOS REPORT (credibility and authority analysis):\n{json.dumps(ethos_report, indent=2)}",
     ]
@@ -93,7 +98,8 @@ def run_judge(
 
     user_parts.append(
         "\nSynthesize the above reports into a final list of fallacy predictions. "
-        "Apply the weighting rules and span refinement rules before deciding."
+        "Apply the weighting rules and span refinement rules before deciding. "
+        "Copy span_text verbatim from the agent reports."
     )
 
     user_message = "\n".join(user_parts)
@@ -156,7 +162,6 @@ if __name__ == "__main__":
         for ann in gold_annotations:
             print(f"  - {ann['fallacy']}: {ann['snippet'][:60]}...")
 
-        # Mock reports constructed from gold annotations for testing
         mock_logos = [
             {"suspected_fallacy": ann["fallacy"], "span_text": ann["snippet"],
              "reasoning": "Mock Logos reasoning."}
